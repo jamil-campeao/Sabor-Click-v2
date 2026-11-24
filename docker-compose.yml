@@ -1,0 +1,39 @@
+services:
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      # Usuário próprio do sistema, com acesso apenas ao banco sabor_clic
+      MYSQL_USER: sabor_app
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - dados_mysql:/var/lib/mysql
+      # Na primeira vez que o banco sobe, cria as tabelas e os dados iniciais
+      - ./database/sabor_clic_banco.sql:/docker-entrypoint-initdb.d/01_sabor_clic_banco.sql:ro
+    healthcheck:
+      # Testa por TCP para só ficar "saudável" depois que o script inicial terminar
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  app:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_USER: sabor_app
+    ports:
+      # Porta do servidor -> porta do container. Troque APP_PORT no .env se a 8000 estiver ocupada
+      - "${APP_PORT}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  dados_mysql:

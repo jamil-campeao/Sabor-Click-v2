@@ -1,0 +1,15 @@
+.git
+.gitignore
+.env
+.env.*
+venv
+.venv
+__pycache__
+*.pyc
+database
+Dockerfile
+docker-compose.yml
+.dockerignore
+README.md
+CONFIGURACAO_MYSQL.txt
+docker-compose.override.yml
